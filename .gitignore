@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode / SwiftPM
+.build/
+*.xcuserstate
+xcuserdata/
+.swiftpm/xcode/xcuserdata/
+.swiftpm/xcode/*.xcworkspace/xcuserdata/
+
+# Build artifacts
+build/
+DerivedData/
