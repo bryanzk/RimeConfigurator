@@ -1,53 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  RimeConfigurator ·  {¡Mnh
-  Concept: candidate window (	y) + configuration  core UI of the app.
-  Export to PNG/ICNS via Xcode Asset Catalog or iconutil for Dock icon.
+  RimeConfigurator app icon
+  Concept: a configuration panel behind a candidate window.
+  The stacked composition keeps the icon legible at small sizes while
+  directly describing what the app does: tune Rime and preview candidates.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2f2824"/>
-      <stop offset="100%" stop-color="#1a1614"/>
+      <stop offset="0%" stop-color="#2b3f49"/>
+      <stop offset="52%" stop-color="#142028"/>
+      <stop offset="100%" stop-color="#0b1115"/>
     </linearGradient>
-    <linearGradient id="pillHi" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f0c06a"/>
-      <stop offset="100%" stop-color="#c4853a"/>
+    <radialGradient id="aurora" cx="42%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#53c0de" stop-opacity="0.72"/>
+      <stop offset="45%" stop-color="#2d86b5" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#0b1115" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panelBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#173340"/>
+      <stop offset="100%" stop-color="#0b1a22"/>
     </linearGradient>
-    <linearGradient id="pillLo" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#4a423c"/>
-      <stop offset="100%" stop-color="#35302c"/>
+    <linearGradient id="paper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcf6e8"/>
+      <stop offset="55%" stop-color="#efe2c6"/>
+      <stop offset="100%" stop-color="#dbc79d"/>
     </linearGradient>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b"/>
-      <feOffset dx="0" dy="4" in="b" result="o"/>
-      <feMerge>
-        <feMergeNode in="o"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <linearGradient id="paperEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="selection" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2f78ff"/>
+      <stop offset="100%" stop-color="#63b6ff"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6b156"/>
+      <stop offset="100%" stop-color="#ef7d3f"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#020406" flood-opacity="0.34"/>
     </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#020406" flood-opacity="0.24"/>
+    </filter>
+    <clipPath id="backPanelClip">
+      <rect x="-280" y="-196" width="560" height="392" rx="84"/>
+    </clipPath>
+    <clipPath id="candidateClip">
+      <rect x="-168" y="-286" width="336" height="572" rx="62"/>
+    </clipPath>
   </defs>
-  <!-- Squircle (macOS icon mask uses ~22% corner radius of square) -->
-  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
-  <!-- Outer vignette -->
-  <rect width="1024" height="1024" rx="230" fill="none" stroke="#000" stroke-opacity="0.25" stroke-width="2"/>
-  <!-- Candidate bar group: centered -->
-  <g transform="translate(512 512)" filter="url(#soft)">
-    <!-- Left pill (dim) -->
-    <rect x="-320" y="-72" width="200" height="144" rx="72" fill="url(#pillLo)"/>
-    <!-- Center pill (highlight / selected candidate) -->
-    <rect x="-100" y="-80" width="200" height="160" rx="80" fill="url(#pillHi)"/>
-    <!-- Right pill (dim) -->
-    <rect x="120" y="-72" width="200" height="144" rx="72" fill="url(#pillLo)"/>
-    <!-- Config ticks (slider metaphor) on right -->
-    <g fill="#8a7f72" opacity="0.9">
-      <rect x="278" y="-48" width="8" height="8" rx="2"/>
-      <rect x="278" y="-8" width="8" height="8" rx="2"/>
-      <rect x="278" y="32" width="8" height="8" rx="2"/>
+
+  <rect width="1024" height="1024" rx="236" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="236" fill="url(#aurora)"/>
+  <circle cx="212" cy="162" r="188" fill="#d8f2ff" fill-opacity="0.08"/>
+  <circle cx="804" cy="808" r="220" fill="#0c2730" fill-opacity="0.45"/>
+  <rect x="18" y="18" width="988" height="988" rx="218" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+
+  <g transform="translate(420 514) rotate(-11)" filter="url(#shadow)">
+    <rect x="-280" y="-196" width="560" height="392" rx="84" fill="url(#panelBack)"/>
+    <rect x="-279" y="-195" width="558" height="390" rx="83" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+    <g clip-path="url(#backPanelClip)">
+      <rect x="-244" y="-146" width="488" height="40" rx="20" fill="#ecf7ff" fill-opacity="0.10"/>
+      <rect x="-244" y="-26" width="488" height="40" rx="20" fill="#ecf7ff" fill-opacity="0.10"/>
+      <rect x="-244" y="94" width="488" height="40" rx="20" fill="#ecf7ff" fill-opacity="0.10"/>
+
+      <rect x="-244" y="-146" width="278" height="40" rx="20" fill="#d3f6ff" fill-opacity="0.18"/>
+      <rect x="-244" y="-26" width="336" height="40" rx="20" fill="#d3f6ff" fill-opacity="0.18"/>
+      <rect x="-244" y="94" width="224" height="40" rx="20" fill="#d3f6ff" fill-opacity="0.18"/>
+
+      <circle cx="56" cy="-126" r="26" fill="url(#accent)"/>
+      <circle cx="120" cy="-6" r="26" fill="#47c7a7"/>
+      <circle cx="-4" cy="114" r="26" fill="#76a9ff"/>
+
+      <rect x="-244" y="154" width="160" height="74" rx="30" fill="#ecf7ff" fill-opacity="0.12"/>
+      <rect x="-52" y="154" width="124" height="74" rx="30" fill="#ecf7ff" fill-opacity="0.12"/>
+      <rect x="104" y="154" width="140" height="74" rx="30" fill="#ecf7ff" fill-opacity="0.12"/>
+
+      <rect x="-214" y="182" width="92" height="18" rx="9" fill="#ecf7ff" fill-opacity="0.48"/>
+      <rect x="-22" y="182" width="62" height="18" rx="9" fill="#ecf7ff" fill-opacity="0.48"/>
+      <rect x="134" y="182" width="84" height="18" rx="9" fill="#ecf7ff" fill-opacity="0.48"/>
     </g>
-    <!-- Label dots 1 · 2 · 3 -->
-    <circle cx="-220" cy="0" r="14" fill="#5c534c"/>
-    <circle cx="0" cy="0" r="16" fill="#fff" fill-opacity="0.35"/>
-    <circle cx="220" cy="0" r="14" fill="#5c534c"/>
+  </g>
+
+  <g transform="translate(612 508) rotate(8)" filter="url(#softShadow)">
+    <rect x="-168" y="-286" width="336" height="572" rx="62" fill="url(#paper)"/>
+    <rect x="-167" y="-285" width="334" height="570" rx="61" fill="none" stroke="url(#paperEdge)" stroke-width="2"/>
+    <g clip-path="url(#candidateClip)">
+      <rect x="-124" y="-232" width="248" height="48" rx="24" fill="#3f4f5f" fill-opacity="0.13"/>
+      <circle cx="-86" cy="-208" r="10" fill="#35414d" fill-opacity="0.38"/>
+      <rect x="-58" y="-218" width="146" height="20" rx="10" fill="#35414d" fill-opacity="0.34"/>
+
+      <rect x="-124" y="-144" width="248" height="90" rx="32" fill="url(#selection)"/>
+      <circle cx="-88" cy="-99" r="11" fill="#ffffff" fill-opacity="0.9"/>
+      <rect x="-56" y="-118" width="140" height="16" rx="8" fill="#ffffff" fill-opacity="0.96"/>
+      <rect x="-56" y="-90" width="104" height="16" rx="8" fill="#ffffff" fill-opacity="0.72"/>
+
+      <g fill="#243443" fill-opacity="0.24">
+        <rect x="-124" y="-28" width="248" height="62" rx="24"/>
+        <rect x="-124" y="52" width="248" height="62" rx="24"/>
+        <rect x="-124" y="132" width="248" height="62" rx="24"/>
+        <rect x="-124" y="212" width="248" height="62" rx="24"/>
+      </g>
+      <g fill="#2d3c49" fill-opacity="0.54">
+        <circle cx="-92" cy="3" r="9"/>
+        <circle cx="-92" cy="83" r="9"/>
+        <circle cx="-92" cy="163" r="9"/>
+        <circle cx="-92" cy="243" r="9"/>
+        <rect x="-60" y="-7" width="126" height="18" rx="9"/>
+        <rect x="-60" y="73" width="154" height="18" rx="9"/>
+        <rect x="-60" y="153" width="118" height="18" rx="9"/>
+        <rect x="-60" y="233" width="144" height="18" rx="9"/>
+      </g>
+      <rect x="-112" y="300" width="224" height="18" rx="9" fill="#ffffff" fill-opacity="0.24"/>
+    </g>
+  </g>
+
+  <g transform="translate(520 238)" filter="url(#softShadow)">
+    <circle r="46" fill="url(#accent)"/>
+    <circle r="30" fill="#fff4df" fill-opacity="0.94"/>
+    <g fill="#ef8d4c">
+      <rect x="-15" y="-13" width="30" height="4" rx="2"/>
+      <rect x="-15" y="-2" width="30" height="4" rx="2"/>
+      <rect x="-15" y="9" width="30" height="4" rx="2"/>
+      <circle cx="5" cy="-11" r="5"/>
+      <circle cx="-3" cy="0" r="5"/>
+      <circle cx="8" cy="11" r="5"/>
+    </g>
   </g>
 </svg>
