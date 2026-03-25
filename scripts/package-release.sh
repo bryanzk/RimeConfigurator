@@ -5,7 +5,7 @@ export COPYFILE_DISABLE=1
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${1:-0.1.0}"
+VERSION="${1:-0.1.1}"
 ARCH="$(uname -m)"
 OUT_ROOT="$ROOT/dist/RimeConfigurator-${VERSION}-macos-${ARCH}"
 APP="$OUT_ROOT/RimeConfigurator.app"
