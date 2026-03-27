@@ -28,11 +28,11 @@ struct SchemasView: View {
 
     private var enabledList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("已启用的输入方案", systemImage: "checkmark.circle.fill", color: .green)
+            sectionHeader(config.strings.schemasEnabledTitle, systemImage: "checkmark.circle.fill", color: .green)
                 .padding(.bottom, 8)
 
             if config.enabledSchemas.isEmpty {
-                emptyStateView("暂无已启用方案", subtitle: "从右侧添加输入方案")
+                emptyStateView(config.strings.schemasEnabledEmptyTitle, subtitle: config.strings.schemasEnabledEmptySubtitle)
             } else {
                 List {
                     ForEach(config.enabledSchemas) { schema in
@@ -52,7 +52,7 @@ struct SchemasView: View {
                 )
             }
 
-            Text("拖动行可调整切换顺序，排在首位的方案将作为默认方案")
+            Text(config.strings.schemasReorderHint)
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.top, 6)
@@ -64,22 +64,22 @@ struct SchemasView: View {
 
     private var availableList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("可用方案库", systemImage: "square.grid.2x2", color: .blue)
+            sectionHeader(config.strings.schemasAvailableTitle, systemImage: "square.grid.2x2", color: .blue)
                 .padding(.bottom, 8)
 
-            TextField("搜索方案…", text: $searchText)
+            TextField(config.strings.schemasSearchPlaceholder, text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .padding(.bottom, 6)
 
             if config.availableSchemas.isEmpty {
-                emptyStateView("未找到可用方案",
-                    subtitle: "请确认 Squirrel 已正确安装\n且 ~/.squirrel/SharedSupport 存在")
+                emptyStateView(config.strings.schemasNoAvailableTitle,
+                    subtitle: config.strings.noSchemasFound(sharedSupportPath: config.sharedSupportDir.path))
             } else if filteredDisabled.isEmpty && !searchText.isEmpty {
-                emptyStateView("无匹配结果", subtitle: "尝试其他关键字")
+                emptyStateView(config.strings.schemasNoMatchTitle, subtitle: config.strings.schemasNoMatchSubtitle)
             } else {
                 List {
                     if filteredDisabled.isEmpty {
-                        Text("所有方案均已启用")
+                        Text(config.strings.schemasAllEnabled)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
@@ -99,7 +99,7 @@ struct SchemasView: View {
                 )
             }
 
-            Text("点击 + 将方案添加到已启用列表")
+            Text(config.strings.schemasAddHint)
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.top, 6)

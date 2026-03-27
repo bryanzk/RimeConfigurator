@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 保存成功后弹出的 Sheet：展示写入的 YAML 内容 + 手动部署引导
+/// 保存成功后弹出的 Sheet：展示写入的 YAML 内容与部署反馈
 struct SavedResultSheet: View {
     @Binding var isPresented: Bool
     @EnvironmentObject var config: ConfigManager
@@ -11,26 +11,30 @@ struct SavedResultSheet: View {
         case defaults = "default.custom.yaml"
     }
 
+    private var feedback: DeployFeedback {
+        config.lastDeployFeedback ?? .noop(strings: config.strings)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                Image(systemName: feedbackIcon)
+                    .foregroundColor(feedbackColor)
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("配置已写入磁盘").font(.headline)
+                    Text(feedback.title).font(.headline)
                     Text("~/Library/Rime/").font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
-                Button("关闭") { isPresented = false }
+                Button(config.strings.close) { isPresented = false }
                     .keyboardShortcut(.cancelAction)
             }
             .padding(16)
 
             Divider()
 
-            // Deploy instruction banner
+            // Deploy feedback banner
             deployBanner
 
             Divider()
@@ -67,35 +71,58 @@ struct SavedResultSheet: View {
 
     private var deployBanner: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
+            Image(systemName: feedbackIcon)
+                .foregroundColor(feedbackColor)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("需要手动触发「重新部署」才能生效")
+                Text(feedback.title)
                     .font(.headline)
 
-                Text("配置文件已保存，但 RIME 需要重新部署后才会读取新设置。请按以下步骤操作：")
+                Text(feedback.message)
                     .font(.callout)
                     .foregroundColor(.secondary)
 
-                // Steps
-                VStack(alignment: .leading, spacing: 4) {
-                    stepRow(n: "1", text: "查看菜单栏右侧，找到「鼠」字图标（鼠须管）")
-                    stepRow(n: "2", text: "点击该图标，在下拉菜单中选择「重新部署」")
-                    stepRow(n: "3", text: "等待 2–3 秒，新设置即刻生效")
+                if feedback.showsManualSteps {
+                    VStack(alignment: .leading, spacing: 4) {
+                        stepRow(n: "1", text: config.strings.manualStep1)
+                        stepRow(n: "2", text: config.strings.manualStep2)
+                        stepRow(n: "3", text: config.strings.manualStep3)
+                    }
+                    .padding(.top, 2)
                 }
-                .padding(.top, 2)
 
                 Button(action: openRimeDirectory) {
-                    Label("在访达中查看配置文件", systemImage: "folder")
+                    Label(config.strings.openConfigInFinder, systemImage: "folder")
                 }
                 .buttonStyle(.link)
                 .font(.callout)
             }
         }
         .padding(16)
-        .background(Color.orange.opacity(0.08))
+        .background(feedbackColor.opacity(0.08))
+    }
+
+    private var feedbackColor: Color {
+        switch feedback.state {
+        case .deployedAutomatically:
+            return .green
+        case .deploymentRequested:
+            return .blue
+        case .manualActionRequired:
+            return .orange
+        }
+    }
+
+    private var feedbackIcon: String {
+        switch feedback.state {
+        case .deployedAutomatically:
+            return "checkmark.circle.fill"
+        case .deploymentRequested:
+            return "arrow.trianglehead.clockwise.circle.fill"
+        case .manualActionRequired:
+            return "exclamationmark.triangle.fill"
+        }
     }
 
     private func stepRow(n: String, text: String) -> some View {

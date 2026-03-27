@@ -16,7 +16,7 @@ struct RimeConfiguratorApp: App {
         .commands {
             CommandGroup(replacing: .newItem) { }   // hide "New Window"
             CommandGroup(after: .appInfo) {
-                Button("保存并部署 RIME") {
+                Button(configManager.strings.saveAndDeployMenu) {
                     NotificationCenter.default.post(
                         name: .init("deployRime"), object: nil)
                 }

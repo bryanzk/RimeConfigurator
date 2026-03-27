@@ -4,6 +4,7 @@ import SwiftUI
 struct CandidatePreview: View {
     let scheme: RimeColorScheme?
     let style: StyleConfig
+    let strings: AppStrings
     let previewCandidates = ["你好", "拟好", "泥濠", "倪浩", "逆号"]
     let previewLabels      = ["1", "2", "3", "4", "5"]
     let selectedIndex      = 0
@@ -13,42 +14,93 @@ struct CandidatePreview: View {
 
     var body: some View {
         ZStack {
-            // Blurred background for context
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(style.translucency ? 0.72 : 0.5))
 
-            // Candidate window
-            VStack(alignment: .leading, spacing: 0) {
-                // Preedit bar
-                if style.inlinePreedit {
+            if style.inlineCandidate {
+                inlineCandidatePreview
+            } else {
+                candidateWindow
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 110)
+    }
+
+    private var candidateWindow: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if style.inlinePreedit {
+                Text(orientedText(preeditText))
+                    .font(.system(size: CGFloat(style.fontPoint) * 0.85))
+                    .foregroundColor(rimeColor(scheme?.hilitedTextColor, fallback: .primary))
+                    .padding(.horizontal, horizontalInset)
+                    .padding(.top, verticalInset)
+                    .padding(.bottom, 2)
+            }
+
+            if isHorizontal {
+                horizontalCandidates
+            } else {
+                verticalCandidates
+            }
+
+            if style.showPaging {
+                pagingBar
+                    .padding(.horizontal, horizontalInset)
+                    .padding(.bottom, max(verticalInset - 2, 4))
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: CGFloat(style.cornerRadius))
+                .fill(rimeColor(scheme?.backColor, fallback: Color(nsColor: .controlBackgroundColor)).opacity(style.translucency ? 0.84 : 1.0))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: CGFloat(style.cornerRadius))
+                .stroke(
+                    rimeColor(scheme?.borderColor, fallback: Color.secondary.opacity(0.3)),
+                    lineWidth: CGFloat(max(style.borderWidth, 0) + 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.25), radius: CGFloat(style.shadowSize + 3), x: 0, y: 2)
+        .padding(20)
+    }
+
+    private var inlineCandidatePreview: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(strings.previewInlineTitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(width: 2, height: 26)
+
+                HStack(spacing: 10) {
                     Text(preeditText)
                         .font(.system(size: CGFloat(style.fontPoint) * 0.85))
-                        .foregroundColor(rimeColor(scheme?.hilitedTextColor, fallback: .primary))
-                        .padding(.horizontal, 10)
-                        .padding(.top, 6)
-                        .padding(.bottom, 2)
-                }
+                        .foregroundStyle(.secondary)
 
-                // Candidates
-                if isHorizontal {
-                    horizontalCandidates
-                } else {
-                    verticalCandidates
+                    HStack(spacing: CGFloat(max(style.spacing, 4))) {
+                        ForEach(Array(previewCandidates.prefix(3).enumerated()), id: \.0) { idx, text in
+                            candidateCell(index: idx, text: text)
+                        }
+                    }
                 }
             }
+            .padding(.horizontal, horizontalInset)
+            .padding(.vertical, max(verticalInset, 8))
             .background(
                 RoundedRectangle(cornerRadius: CGFloat(style.cornerRadius))
-                    .fill(rimeColor(scheme?.backColor, fallback: Color(nsColor: .controlBackgroundColor)))
+                    .fill(rimeColor(scheme?.backColor, fallback: Color(nsColor: .controlBackgroundColor)).opacity(style.translucency ? 0.84 : 1.0))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: CGFloat(style.cornerRadius))
-                    .stroke(rimeColor(scheme?.borderColor, fallback: Color.secondary.opacity(0.3)),
-                            lineWidth: 1)
+                    .stroke(rimeColor(scheme?.borderColor, fallback: Color.secondary.opacity(0.3)), lineWidth: CGFloat(max(style.borderWidth, 0) + 1))
             )
-            .shadow(color: .black.opacity(0.25), radius: CGFloat(style.shadowSize + 3), x: 0, y: 2)
-            .padding(20)
+            .shadow(color: .black.opacity(0.18), radius: CGFloat(style.shadowSize + 2), x: 0, y: 2)
         }
-        .frame(maxWidth: .infinity, minHeight: 110)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Candidate Lists
@@ -59,8 +111,8 @@ struct CandidatePreview: View {
                 candidateCell(index: idx, text: text)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, horizontalInset)
+        .padding(.vertical, verticalInset)
     }
 
     private var verticalCandidates: some View {
@@ -69,8 +121,8 @@ struct CandidatePreview: View {
                 candidateCell(index: idx, text: text)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, horizontalInset)
+        .padding(.vertical, verticalInset)
     }
 
     private func candidateCell(index: Int, text: String) -> some View {
@@ -83,13 +135,14 @@ struct CandidatePreview: View {
             : rimeColor(scheme?.candidateTextColor, fallback: Color.primary)
         let labelColor = rimeColor(scheme?.labelColor, fallback: Color.secondary)
 
-        return HStack(spacing: 4) {
+        return HStack(alignment: .top, spacing: 4) {
             Text(previewLabels[index])
                 .font(.system(size: CGFloat(style.labelFontPoint)))
                 .foregroundColor(labelColor)
-            Text(text)
+            Text(orientedText(text))
                 .font(.custom(style.fontFace, size: CGFloat(style.fontPoint)))
                 .foregroundColor(textColor)
+                .multilineTextAlignment(style.textOrientation == "vertical" ? .center : .leading)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
@@ -99,10 +152,35 @@ struct CandidatePreview: View {
         )
     }
 
+    private var pagingBar: some View {
+        HStack(spacing: 8) {
+            Spacer()
+            Image(systemName: "chevron.left")
+            Text(strings.pagingIndicator)
+                .font(.caption.monospacedDigit())
+            Image(systemName: "chevron.right")
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
     // MARK: - Color Helper
 
     private func rimeColor(_ color: RimeColor?, fallback: Color) -> Color {
         guard let c = color, c.rawValue != 0 else { return fallback }
         return c.swiftUIColor
+    }
+
+    private var horizontalInset: CGFloat {
+        CGFloat(max(style.borderWidth, 0) + 10)
+    }
+
+    private var verticalInset: CGFloat {
+        CGFloat(max(style.borderHeight, 0) + 6)
+    }
+
+    private func orientedText(_ text: String) -> String {
+        guard style.textOrientation == "vertical" else { return text }
+        return text.map(String.init).joined(separator: "\n")
     }
 }

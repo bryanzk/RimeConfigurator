@@ -1,11 +1,11 @@
 import SwiftUI
 
-enum NavTab: String, CaseIterable, Identifiable {
-    case schemas    = "输入方案"
-    case appearance = "外观设置"
-    case behavior   = "行为设置"
+enum NavTab: CaseIterable, Identifiable {
+    case schemas
+    case appearance
+    case behavior
 
-    var id: String { rawValue }
+    var id: String { systemImage }
 
     var systemImage: String {
         switch self {
@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var deployResult:    DeployResult?
     @State private var showDeployAlert  = false
     @State private var showSavedSheet   = false
+    @State private var showDiscardAlert = false
 
     enum DeployResult {
         case success
@@ -36,10 +37,18 @@ struct ContentView: View {
             detail
         }
         .toolbar { toolbarContent }
-        .alert("保存失败", isPresented: $showDeployAlert) {
-            Button("好") { deployResult = nil }
+        .alert(config.strings.saveFailed, isPresented: $showDeployAlert) {
+            Button(config.strings.ok) { deployResult = nil }
         } message: {
             if case .failure(let msg) = deployResult { Text(msg) }
+        }
+        .alert(config.strings.discardUnsavedTitle, isPresented: $showDiscardAlert) {
+            Button(config.strings.continueEditing, role: .cancel) { }
+            Button(config.strings.discardChanges, role: .destructive) {
+                config.discardChanges()
+            }
+        } message: {
+            Text(config.strings.discardUnsavedMessage)
         }
         .sheet(isPresented: $showSavedSheet) {
             SavedResultSheet(isPresented: $showSavedSheet)
@@ -58,9 +67,9 @@ struct ContentView: View {
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(Color.accentColor)
                     .font(.system(size: 36))
-                Text("鼠须管配置器")
+                Text(config.strings.appName)
                     .font(.headline)
-                Text("RIME Squirrel")
+                Text(config.strings.appSubtitle)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -72,7 +81,7 @@ struct ContentView: View {
             // Nav items
             List(NavTab.allCases, selection: $selectedTab) { tab in
                 NavigationLink(value: tab) {
-                    Label(tab.rawValue, systemImage: tab.systemImage)
+                    Label(config.strings.tabTitle(tab), systemImage: tab.systemImage)
                 }
             }
             .listStyle(.sidebar)
@@ -81,7 +90,7 @@ struct ContentView: View {
 
             // Rime version info
             VStack(spacing: 2) {
-                Text("Squirrel 鼠须管")
+                Text(config.strings.squirrelLabel)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text("RIME \(rimeVersion)")
@@ -111,15 +120,23 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detail: some View {
-        if config.isLoaded {
-            switch selectedTab {
-            case .schemas:    SchemasView()
-            case .appearance: AppearanceView()
-            case .behavior:   BehaviorView()
+        VStack(spacing: 0) {
+            if let diagnostic = config.primaryDiagnostic {
+                diagnosticBanner(diagnostic)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
             }
-        } else {
-            ProgressView("正在读取配置…")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if config.isLoaded {
+                switch selectedTab {
+                case .schemas:    SchemasView()
+                case .appearance: AppearanceView()
+                case .behavior:   BehaviorView()
+                }
+            } else {
+                ProgressView(config.strings.readingConfig)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
     }
 
@@ -127,29 +144,37 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .automatic) {
+            if config.hasUnsavedChanges {
+                Label(config.strings.unsavedChanges, systemImage: "circle.fill")
+                    .foregroundStyle(.orange)
+                    .help(config.strings.unsavedChangesHelp)
+            }
+        }
+
         ToolbarItem(placement: .primaryAction) {
             Button(action: saveAndDeploy) {
                 if isDeploying {
                     HStack(spacing: 6) {
                         ProgressView().scaleEffect(0.7)
-                        Text("部署中…")
+                        Text(config.strings.deploying)
                     }
                 } else {
-                    Label("保存并部署", systemImage: "arrow.clockwise.circle.fill")
+                    Label(config.strings.saveAndDeploy, systemImage: "arrow.clockwise.circle.fill")
                 }
             }
             .buttonStyle(.borderedProminent)
             .disabled(isDeploying || !config.isLoaded)
-            .help("保存配置文件并重新部署 RIME（⌘⇧R）")
+            .help(config.strings.saveAndDeployHelp)
             .keyboardShortcut("r", modifiers: [.command, .shift])
         }
 
         ToolbarItem {
-            Button(action: { config.loadConfig() }) {
-                Label("重新读取", systemImage: "arrow.counterclockwise")
+            Button(action: reloadFromDisk) {
+                Label(config.strings.reload, systemImage: "arrow.counterclockwise")
             }
-            .help("放弃修改，重新从磁盘读取配置")
-            .disabled(isDeploying)
+            .help(config.strings.reloadHelp)
+            .disabled(isDeploying || !config.isLoaded)
         }
     }
 
@@ -159,11 +184,10 @@ struct ContentView: View {
         isDeploying = true
         Task {
             do {
-                try config.saveConfig()
-                config.deployRime()       // 非 throws，内部多策略尝试
+                _ = try await config.saveAndDeploy()
                 await MainActor.run {
                     isDeploying     = false
-                    showSavedSheet  = true  // 展示已保存内容 + 手动部署提示
+                    showSavedSheet  = true
                 }
             } catch {
                 await MainActor.run {
@@ -172,6 +196,48 @@ struct ContentView: View {
                     isDeploying     = false
                 }
             }
+        }
+    }
+
+    private func reloadFromDisk() {
+        if config.hasUnsavedChanges {
+            showDiscardAlert = true
+        } else {
+            config.loadConfig()
+        }
+    }
+
+    @ViewBuilder
+    private func diagnosticBanner(_ diagnostic: ConfigDiagnostic) -> some View {
+        let style = diagnosticStyle(for: diagnostic.kind)
+
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: style.icon)
+                .foregroundStyle(style.color)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(diagnostic.message)
+                    .font(.callout)
+                if config.diagnostics.count > 1 {
+                    Text(config.strings.moreDiagnostics(config.diagnostics.count - 1))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+        .padding(12)
+        .background(style.color.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func diagnosticStyle(for kind: ConfigDiagnosticKind) -> (color: Color, icon: String) {
+        switch kind {
+        case .error:
+            return (.red, "exclamationmark.octagon.fill")
+        case .warning:
+            return (.orange, "exclamationmark.triangle.fill")
+        case .info:
+            return (.blue, "info.circle.fill")
         }
     }
 }

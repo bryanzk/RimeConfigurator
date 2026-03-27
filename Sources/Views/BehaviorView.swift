@@ -1,18 +1,76 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BehaviorView: View {
     @EnvironmentObject var config: ConfigManager
+    @State private var newBundleID = ""
+    @State private var appSelectionError: String?
+
+    private let commonApps: [(String, String)] = [
+        ("Terminal", "com.apple.Terminal"),
+        ("iTerm2", "com.googlecode.iterm2"),
+        ("VS Code", "com.microsoft.VSCode"),
+        ("Xcode", "com.apple.dt.Xcode")
+    ]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                actionBar
+                languageSection
+                Divider()
                 pageSizeSection
                 Divider()
                 inputModeSection
                 Divider()
-                appOverrideHintSection
+                appOverrideSection
             }
             .padding(24)
+        }
+        .alert(config.strings.chooseAppErrorTitle, isPresented: Binding(
+            get: { appSelectionError != nil },
+            set: { if !$0 { appSelectionError = nil } }
+        )) {
+            Button(config.strings.ok) { appSelectionError = nil }
+        } message: {
+            Text(appSelectionError ?? config.strings.chooseAppErrorMessage)
+        }
+    }
+
+    private var actionBar: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(config.strings.behaviorTitle)
+                    .font(.title3.weight(.semibold))
+                Text(config.strings.behaviorDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button(config.strings.resetBehaviorDefaults) {
+                config.resetBehaviorDefaults()
+            }
+        }
+    }
+
+    private var languageSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(config.strings.languageTitle, systemImage: "globe")
+                .font(.headline)
+
+            Text(config.strings.languageDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Picker("", selection: Binding(
+                get: { config.language },
+                set: { config.setLanguage($0) }
+            )) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .pickerStyle(.menu)
         }
     }
 
@@ -20,7 +78,7 @@ struct BehaviorView: View {
 
     private var pageSizeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("每页候选词数量", systemImage: "list.number")
+            Label(config.strings.pageSizeTitle, systemImage: "list.number")
                 .font(.headline)
 
             HStack(spacing: 8) {
@@ -29,7 +87,7 @@ struct BehaviorView: View {
                 }
             }
 
-            Text("当前设置：每页显示 \(config.behavior.pageSize) 个候选词")
+            Text(config.strings.currentPageSize(config.behavior.pageSize))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -59,34 +117,34 @@ struct BehaviorView: View {
 
     private var inputModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("输入行为", systemImage: "keyboard")
+            Label(config.strings.inputBehaviorTitle, systemImage: "keyboard")
                 .font(.headline)
 
             VStack(spacing: 0) {
                 behaviorToggleRow(
-                    title: "在线预编辑",
-                    subtitle: "在光标处直接显示正在输入的拼音，不弹出单独的预编辑框",
+                    title: config.strings.inlinePreedit,
+                    subtitle: config.strings.inlinePreeditDescription,
                     binding: $config.style.inlinePreedit,
                     icon: "text.cursor"
                 )
                 Divider().padding(.leading, 52)
                 behaviorToggleRow(
-                    title: "候选词内嵌",
-                    subtitle: "候选词直接内嵌在光标位置，不显示候选窗口",
+                    title: config.strings.inlineCandidate,
+                    subtitle: config.strings.inlineCandidateDescription,
                     binding: $config.style.inlineCandidate,
                     icon: "rectangle.inset.filled"
                 )
                 Divider().padding(.leading, 52)
                 behaviorToggleRow(
-                    title: "磨砂透明效果",
-                    subtitle: "候选窗口背景使用半透明磨砂效果（需要系统支持）",
+                    title: config.strings.translucency,
+                    subtitle: config.strings.translucencyDescription,
                     binding: $config.style.translucency,
                     icon: "circle.lefthalf.filled.righthalf.striped.horizontal"
                 )
                 Divider().padding(.leading, 52)
                 behaviorToggleRow(
-                    title: "显示翻页按钮",
-                    subtitle: "在候选窗口中显示上一页/下一页的箭头按钮",
+                    title: config.strings.showPaging,
+                    subtitle: config.strings.showPagingDescription,
                     binding: $config.style.showPaging,
                     icon: "chevron.left.chevron.right"
                 )
@@ -127,30 +185,130 @@ struct BehaviorView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - App Override Hint
+    // MARK: - App Override
 
-    private var appOverrideHintSection: some View {
+    private var appOverrideSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("按应用覆盖配置", systemImage: "app.badge.checkmark")
+            Label(config.strings.appOverrideTitle, systemImage: "app.badge.checkmark")
                 .font(.headline)
 
-            Text("""
-                鼠须管支持针对特定应用程序设置不同的行为，例如在终端中自动切换为英文模式。\
-                如需配置，请直接编辑 squirrel.custom.yaml 中的 app_options 节。
-                """)
+            Text(config.strings.appOverrideDescription)
                 .font(.callout)
                 .foregroundColor(.secondary)
 
-            Button("在访达中打开配置目录") {
-                NSWorkspace.shared.open(
-                    FileManager.default.homeDirectoryForCurrentUser
-                        .appendingPathComponent("Library/Rime")
-                )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(commonApps, id: \.1) { app in
+                        Button(app.0) {
+                            config.addAppOption(bundleID: app.1)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
             }
-            .buttonStyle(.link)
+
+            HStack {
+                TextField(config.strings.bundleIDPlaceholder, text: $newBundleID)
+                    .textFieldStyle(.roundedBorder)
+                Button(config.strings.chooseApp) {
+                    chooseLocalApp()
+                }
+                .buttonStyle(.bordered)
+                Button(config.strings.add) {
+                    config.addAppOption(bundleID: newBundleID)
+                    newBundleID = ""
+                }
+                .disabled(newBundleID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            if config.appOptions.isEmpty {
+                Text(config.strings.noAppOverrides)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            } else {
+                VStack(spacing: 12) {
+                    ForEach($config.appOptions) { $option in
+                        AppOptionCard(option: $option, strings: config.strings) {
+                            config.removeAppOption(option)
+                        }
+                    }
+                }
+                .padding(.top, 6)
+            }
+
+            Text(config.strings.appOverrideHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(14)
         .background(Color.accentColor.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+private struct AppOptionCard: View {
+    @Binding var option: AppOption
+    let strings: AppStrings
+    let onRemove: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(option.displayTitle)
+                        .font(.body.weight(.medium))
+                    Text("\(strings.appBundleIDLabel): \(option.bundleID)")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button(role: .destructive, action: onRemove) {
+                    Label(strings.remove, systemImage: "trash")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
+                GridRow {
+                    Toggle(strings.defaultEnglish, isOn: $option.asciiMode)
+                    Toggle(strings.embeddedCandidates, isOn: $option.inlineMode)
+                }
+                GridRow {
+                    Toggle(strings.disableInline, isOn: $option.noInline)
+                    Toggle(strings.vimMode, isOn: $option.vimMode)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+        )
+    }
+}
+
+private extension BehaviorView {
+    func chooseLocalApp() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = config.strings.chooseApp
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        guard let descriptor = AppBundleDescriptor(appURL: url) else {
+            appSelectionError = config.strings.chooseAppErrorMessage
+            return
+        }
+
+        config.addAppOption(descriptor: descriptor)
     }
 }

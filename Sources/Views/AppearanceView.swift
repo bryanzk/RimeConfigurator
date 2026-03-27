@@ -6,6 +6,8 @@ struct AppearanceView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                actionBar
+
                 // Preview
                 previewSection
 
@@ -33,19 +35,39 @@ struct AppearanceView: View {
         }
     }
 
+    private var actionBar: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(config.strings.appearanceTitle)
+                    .font(.title3.weight(.semibold))
+                Text(config.strings.appearanceDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button(config.strings.resetAppearanceDefaults) {
+                config.resetAppearanceDefaults()
+            }
+        }
+    }
+
     // MARK: - Preview
 
     private var previewSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("候选窗口预览", systemImage: "eye")
-                .font(.headline)
+            sectionHeader(config.strings.previewTitle, systemImage: "eye")
             CandidatePreview(
                 scheme: config.currentColorScheme,
-                style:  config.style
+                style:  config.style,
+                strings: config.strings
             )
             .frame(maxWidth: .infinity)
             .background(Color(nsColor: .unemphasizedSelectedContentBackgroundColor).opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Text(config.strings.previewCoverage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -53,14 +75,14 @@ struct AppearanceView: View {
 
     private var colorSchemeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("颜色方案", systemImage: "paintpalette")
-                .font(.headline)
+            sectionHeader(config.strings.colorSchemes, systemImage: "paintpalette")
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 10)], spacing: 10) {
                 ForEach(config.colorSchemes) { scheme in
                     ColorSchemeCard(
                         scheme: scheme,
-                        isSelected: scheme.id == config.style.colorScheme
+                        isSelected: scheme.id == config.style.colorScheme,
+                        strings: config.strings
                     ) {
                         config.style.colorScheme = scheme.id
                     }
@@ -73,30 +95,21 @@ struct AppearanceView: View {
 
     private var fontSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("字体设置", systemImage: "textformat")
-                .font(.headline)
+            sectionHeader(config.strings.fontSettings, systemImage: "textformat")
 
-            Grid(alignment: .leading, verticalSpacing: 10) {
-                GridRow {
-                    Text("候选词字体")
-                        .foregroundColor(.secondary)
-                    HStack(spacing: 8) {
-                        FontPicker(selection: $config.style.fontFace)
-                            .frame(maxWidth: 200)
-                        Stepper("\(config.style.fontPoint) pt",
-                                value: $config.style.fontPoint, in: 10...32)
-                    }
-                }
-                GridRow {
-                    Text("标签字体")
-                        .foregroundColor(.secondary)
-                    HStack(spacing: 8) {
-                        FontPicker(selection: $config.style.labelFontFace)
-                            .frame(maxWidth: 200)
-                        Stepper("\(config.style.labelFontPoint) pt",
-                                value: $config.style.labelFontPoint, in: 8...28)
-                    }
-                }
+            VStack(spacing: 10) {
+                fontRow(
+                    title: config.strings.candidateFont,
+                    selection: $config.style.fontFace,
+                    size: $config.style.fontPoint,
+                    range: 10...32
+                )
+                fontRow(
+                    title: config.strings.labelFont,
+                    selection: $config.style.labelFontFace,
+                    size: $config.style.labelFontPoint,
+                    range: 8...28
+                )
             }
         }
     }
@@ -105,16 +118,15 @@ struct AppearanceView: View {
 
     private var layoutSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("排列方式", systemImage: "rectangle.split.1x2")
-                .font(.headline)
+            sectionHeader(config.strings.layoutTitle, systemImage: "rectangle.split.1x2")
 
             HStack(spacing: 20) {
                 // Candidate list layout
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("候选词布局").foregroundColor(.secondary)
+                    Text(config.strings.candidateLayout).foregroundColor(.secondary)
                     Picker("", selection: $config.style.candidateListLayout) {
-                        Label("竖排", systemImage: "list.bullet").tag("stacked")
-                        Label("横排", systemImage: "list.bullet.indent").tag("linear")
+                        Label(config.strings.vertical, systemImage: "list.bullet").tag("stacked")
+                        Label(config.strings.horizontal, systemImage: "list.bullet.indent").tag("linear")
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 160)
@@ -122,10 +134,10 @@ struct AppearanceView: View {
 
                 // Text orientation
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("文字方向").foregroundColor(.secondary)
+                    Text(config.strings.textDirection).foregroundColor(.secondary)
                     Picker("", selection: $config.style.textOrientation) {
-                        Label("横向", systemImage: "text.alignleft").tag("horizontal")
-                        Label("纵向", systemImage: "text.alignright").tag("vertical")
+                        Label(config.strings.horizontal, systemImage: "text.alignleft").tag("horizontal")
+                        Label(config.strings.vertical, systemImage: "text.alignright").tag("vertical")
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 160)
@@ -134,10 +146,10 @@ struct AppearanceView: View {
 
             // Toggles
             HStack(spacing: 24) {
-                Toggle("在线预编辑", isOn: $config.style.inlinePreedit)
-                Toggle("候选内嵌", isOn: $config.style.inlineCandidate)
-                Toggle("磨砂透明", isOn: $config.style.translucency)
-                Toggle("显示翻页", isOn: $config.style.showPaging)
+                Toggle(config.strings.inlinePreedit, isOn: $config.style.inlinePreedit)
+                Toggle(config.strings.inlineCandidate, isOn: $config.style.inlineCandidate)
+                Toggle(config.strings.translucency, isOn: $config.style.translucency)
+                Toggle(config.strings.showPaging, isOn: $config.style.showPaging)
             }
         }
     }
@@ -146,29 +158,28 @@ struct AppearanceView: View {
 
     private var geometrySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("尺寸与间距", systemImage: "ruler")
-                .font(.headline)
+            sectionHeader(config.strings.geometryTitle, systemImage: "ruler")
 
             Grid(alignment: .leading, verticalSpacing: 10) {
-                sliderRow("圆角半径",
+                sliderRow(config.strings.cornerRadius,
                           value: $config.style.cornerRadius,
                           range: 0...20, unit: "px")
-                sliderRow("高亮圆角",
+                sliderRow(config.strings.hiliteCornerRadius,
                           value: $config.style.hiliteCornerRadius,
                           range: 0...20, unit: "px")
-                sliderRow("边框高度",
+                sliderRow(config.strings.borderHeight,
                           value: $config.style.borderHeight,
                           range: -4...20, unit: "px")
-                sliderRow("边框宽度",
+                sliderRow(config.strings.borderWidth,
                           value: $config.style.borderWidth,
                           range: -4...20, unit: "px")
-                sliderRow("行间距",
+                sliderRow(config.strings.lineSpacing,
                           value: $config.style.lineSpacing,
                           range: 0...20, unit: "px")
-                sliderRow("候选间距",
+                sliderRow(config.strings.spacing,
                           value: $config.style.spacing,
                           range: 0...30, unit: "px")
-                sliderRow("阴影大小",
+                sliderRow(config.strings.shadowSize,
                           value: $config.style.shadowSize,
                           range: 0...20, unit: "px")
             }
@@ -196,6 +207,40 @@ struct AppearanceView: View {
             }
         }
     }
+
+    private func fontRow(
+        title: String,
+        selection: Binding<String>,
+        size: Binding<Int>,
+        range: ClosedRange<Int>
+    ) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text(title)
+                .foregroundColor(.secondary)
+                .frame(width: 120, alignment: .leading)
+
+            FontPicker(selection: selection)
+                .frame(minWidth: 180, maxWidth: 260)
+
+            Spacer(minLength: 12)
+
+            Stepper(value: size, in: range) {
+                Text("\(size.wrappedValue) pt")
+                    .frame(width: 52, alignment: .trailing)
+                    .monospacedDigit()
+            }
+            .fixedSize()
+        }
+    }
+
+    private func sectionHeader(_ title: String, systemImage: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.headline)
+        }
+    }
 }
 
 // MARK: - Color Scheme Card
@@ -203,6 +248,7 @@ struct AppearanceView: View {
 struct ColorSchemeCard: View {
     let scheme: RimeColorScheme
     let isSelected: Bool
+    let strings: AppStrings
     let action: () -> Void
     @State private var isHovered = false
 
@@ -260,7 +306,7 @@ struct ColorSchemeCard: View {
                         .font(.system(size: 10))
                         .foregroundColor(scheme.labelColor.rawValue != 0
                             ? scheme.labelColor.swiftUIColor : .secondary)
-                    Text("候选")
+                    Text(strings.candidateSample)
                         .font(.system(size: 11))
                         .foregroundColor(scheme.candidateTextColor.rawValue != 0
                             ? scheme.candidateTextColor.swiftUIColor : .primary)
@@ -273,7 +319,7 @@ struct ColorSchemeCard: View {
                         .font(.system(size: 10))
                         .foregroundColor(scheme.labelColor.rawValue != 0
                             ? scheme.labelColor.swiftUIColor : .secondary)
-                    Text("高亮")
+                    Text(strings.highlightSample)
                         .font(.system(size: 11))
                         .foregroundColor(scheme.hilitedCandidateTextColor.rawValue != 0
                             ? scheme.hilitedCandidateTextColor.swiftUIColor : .white)
