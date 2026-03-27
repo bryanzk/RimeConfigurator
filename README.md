@@ -13,6 +13,11 @@ A native macOS GUI for configuring [Squirrel](https://github.com/rime/squirrel),
 > **繁體中文** 需要 macOS 13 Ventura 或更新版本；須已安裝鼠鬚管。  
 > **English** Requires macOS 13 Ventura or later. Squirrel must already be installed.
 
+**下载 · 下載 · Download**
+- **简体中文**：[下载最新版本 v0.2.0](https://github.com/bryanzk/RimeConfigurator/releases/tag/v0.2.0) · [直接下载 Apple Silicon 安装包](https://github.com/bryanzk/RimeConfigurator/releases/download/v0.2.0/RimeConfigurator-0.2.0-macos-arm64.zip)
+- **繁體中文**：[下載最新版本 v0.2.0](https://github.com/bryanzk/RimeConfigurator/releases/tag/v0.2.0) · [直接下載 Apple Silicon 安裝包](https://github.com/bryanzk/RimeConfigurator/releases/download/v0.2.0/RimeConfigurator-0.2.0-macos-arm64.zip)
+- **English**: [Latest release v0.2.0](https://github.com/bryanzk/RimeConfigurator/releases/tag/v0.2.0) · [Direct Apple Silicon download](https://github.com/bryanzk/RimeConfigurator/releases/download/v0.2.0/RimeConfigurator-0.2.0-macos-arm64.zip)
+
 ---
 
 ## 功能 · Features
