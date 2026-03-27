@@ -5,10 +5,8 @@ struct CandidatePreview: View {
     let scheme: RimeColorScheme?
     let style: StyleConfig
     let strings: AppStrings
-    let previewCandidates = ["你好", "拟好", "泥濠", "倪浩", "逆号"]
     let previewLabels      = ["1", "2", "3", "4", "5"]
     let selectedIndex      = 0
-    let preeditText        = "ni hao"
 
     private var isHorizontal: Bool { style.candidateListLayout == "linear" }
 
@@ -29,7 +27,7 @@ struct CandidatePreview: View {
     private var candidateWindow: some View {
         VStack(alignment: .leading, spacing: 0) {
             if style.inlinePreedit {
-                Text(orientedText(preeditText))
+                Text(orientedText(strings.previewPreeditText))
                     .font(.system(size: CGFloat(style.fontPoint) * 0.85))
                     .foregroundColor(rimeColor(scheme?.hilitedTextColor, fallback: .primary))
                     .padding(.horizontal, horizontalInset)
@@ -76,12 +74,12 @@ struct CandidatePreview: View {
                     .frame(width: 2, height: 26)
 
                 HStack(spacing: 10) {
-                    Text(preeditText)
+                    Text(strings.previewPreeditText)
                         .font(.system(size: CGFloat(style.fontPoint) * 0.85))
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: CGFloat(max(style.spacing, 4))) {
-                        ForEach(Array(previewCandidates.prefix(3).enumerated()), id: \.0) { idx, text in
+                        ForEach(Array(strings.previewCandidates.prefix(3).enumerated()), id: \.0) { idx, text in
                             candidateCell(index: idx, text: text)
                         }
                     }
@@ -107,7 +105,7 @@ struct CandidatePreview: View {
 
     private var horizontalCandidates: some View {
         HStack(spacing: CGFloat(style.spacing)) {
-            ForEach(Array(previewCandidates.prefix(5).enumerated()), id: \.0) { idx, text in
+            ForEach(Array(strings.previewCandidates.prefix(5).enumerated()), id: \.0) { idx, text in
                 candidateCell(index: idx, text: text)
             }
         }
@@ -117,7 +115,7 @@ struct CandidatePreview: View {
 
     private var verticalCandidates: some View {
         VStack(alignment: .leading, spacing: CGFloat(style.lineSpacing)) {
-            ForEach(Array(previewCandidates.prefix(5).enumerated()), id: \.0) { idx, text in
+            ForEach(Array(strings.previewCandidates.prefix(5).enumerated()), id: \.0) { idx, text in
                 candidateCell(index: idx, text: text)
             }
         }

@@ -20,20 +20,23 @@ A native macOS GUI for configuring [Squirrel](https://github.com/rime/squirrel),
 **简体中文**
 - **输入方案**：查看 `~/Library/Rime` 与 Squirrel SharedSupport 中的方案；一键启用/禁用；拖拽排序（首位为默认）；在方案库中按名称或 ID 搜索。
 - **外观**：实时候选窗预览；从卡片网格选择配色（来自 `squirrel.yaml`）；候选字/标签字体与字号；候选纵向/横向排列；文字横排/竖排；圆角、行距、间距、阴影等几何项；在线预编辑、候选内嵌、磨砂透明、翻页按钮等开关。
-- **行为**：每页候选数量（1–9）；上述输入相关开关及说明；一键在访达中打开 Rime 配置目录。
-- **保存与部署**：**⌘⇧R** 或工具栏按钮写入配置并触发重新部署；保存后可查看写入磁盘的 YAML（`squirrel.custom.yaml`、`default.custom.yaml`）；通过 Squirrel 的通知机制部署，与菜单栏「重新部署」一致。
+- **行为**：每页候选数量（1–9）；界面语言切换（简中 / 繁中 / 英文）；按应用覆盖（`app_options`），可为终端、编辑器等单独设置默认英文、内嵌候选、禁用内嵌、Vim 模式；一键在访达中打开 Rime 配置目录。
+- **保存与部署**：**⌘⇧R** 或工具栏按钮写入配置并触发重新部署；保存后可查看写入磁盘的 YAML（`squirrel.custom.yaml`、`default.custom.yaml`）；保存结果会区分自动生效、已请求自动部署或仍需手动部署。
+- **安全试错**：显示环境诊断、未保存修改提示、放弃修改确认，以及外观/行为默认值重置，降低误操作成本。
 
 **繁體中文**
 - **輸入方案**：檢視 `~/Library/Rime` 與 Squirrel SharedSupport 內的方案；一鍵啟用/停用；拖曳排序（第一個為預設）；在方案庫依名稱或 ID 搜尋。
 - **外觀**：即時候選視窗預覽；從卡片網格選擇配色（來自 `squirrel.yaml`）；候選字/標籤字型與字級；候選直向/橫向排列；文字橫排/直排；圓角、行距、間距、陰影等幾何設定；線上預編輯、候選內嵌、磨砂透明、翻頁按鈕等開關。
-- **行為**：每頁候選數量（1–9）；上述輸入相關開關與說明；一鍵在 Finder 中開啟 Rime 設定目錄。
-- **儲存與部署**：**⌘⇧R** 或工具列按鈕寫入設定並觸發重新部署；儲存後可檢視寫入磁碟的 YAML（`squirrel.custom.yaml`、`default.custom.yaml`）；透過 Squirrel 的通知機制部署，與選單列「重新部署」相同。
+- **行為**：每頁候選數量（1–9）；介面語言切換（簡中 / 繁中 / 英文）；按 App 覆寫（`app_options`），可為終端機、編輯器等單獨設定預設英文、內嵌候選、停用內嵌、Vim 模式；一鍵在 Finder 中開啟 Rime 設定目錄。
+- **儲存與部署**：**⌘⇧R** 或工具列按鈕寫入設定並觸發重新部署；儲存後可檢視寫入磁碟的 YAML（`squirrel.custom.yaml`、`default.custom.yaml`）；儲存結果會區分自動生效、已要求自動重新部署，或仍需手動重新部署。
+- **安全試錯**：顯示環境診斷、未儲存修改提示、放棄修改確認，以及外觀／行為預設值重設，降低誤操作成本。
 
 **English**
 - **Input schemas**: Lists schemas in `~/Library/Rime` and Squirrel’s SharedSupport; enable/disable in one click; drag to reorder (first = default); search the library by name or schema ID.
 - **Appearance**: Live candidate-window preview; color schemes from a card grid (from `squirrel.yaml`); candidate & label fonts; stacked vs linear layout; text orientation; geometry sliders; toggles for inline preedit, inline candidate, translucency, paging.
-- **Behavior**: Candidates per page (1–9); the same behavior toggles with descriptions; open the Rime config folder in Finder.
-- **Save & deploy**: **⌘⇧R** or the toolbar writes config and triggers redeploy; after save, a sheet shows YAML written to `squirrel.custom.yaml` and `default.custom.yaml`; uses Squirrel’s notification path, same as “Redeploy” from the menu bar.
+- **Behavior**: Candidates per page (1–9); interface language switching (Simplified Chinese / Traditional Chinese / English); per-app overrides (`app_options`) for terminals and editors, including default English mode, inline candidates, disabling inline mode, and Vim mode; open the Rime config folder in Finder.
+- **Save & deploy**: **⌘⇧R** or the toolbar writes config and triggers redeploy; after save, a sheet shows YAML written to `squirrel.custom.yaml` and `default.custom.yaml`; save feedback distinguishes between auto-applied changes, auto-redeploy requested, and manual redeploy required.
+- **Safer editing**: Environment diagnostics, unsaved-change indicators, discard-confirmation flow, and reset-to-default actions for appearance and behavior.
 
 ---
 
@@ -88,9 +91,9 @@ RimeConfigurator 读写标准 Rime 用户目录 · RimeConfigurator 讀寫標準
 **繁體中文** 儲存後會向 Squirrel 發送分散式通知以觸發重新部署；若通知未送達，會觸碰 `installation.yaml` 並嘗試以 Squirrel 的 `--reload` 作為後備。  
 **English** After saving, it posts a distributed notification to Squirrel for redeploy; if that fails, it touches `installation.yaml` and tries invoking Squirrel with `--reload` as a fallback.
 
-> **简体中文** 按应用覆盖（`app_options`）暂无法在界面中配置，可直接编辑 `squirrel.custom.yaml`；在「行为」页点击「在访达中打开配置目录」可快速跳转。  
-> **繁體中文** 依 App 覆寫（`app_options`）暫無法在介面中設定，可直接編輯 `squirrel.custom.yaml`；在「行為」頁點「在 Finder 中開啟設定目錄」可快速前往。  
-> **English** Per-app overrides (`app_options`) are not configurable in the GUI yet; edit `squirrel.custom.yaml` directly—use “Open config folder in Finder” on the Behavior tab.
+> **简体中文** `app_options` 已支持在「行为」页图形化配置；如需高级字段，仍可直接编辑 `squirrel.custom.yaml`。  
+> **繁體中文** `app_options` 已支援在「行為」頁以圖形介面設定；若需進階欄位，仍可直接編輯 `squirrel.custom.yaml`。  
+> **English** `app_options` can now be configured from the Behavior tab; for advanced fields, you can still edit `squirrel.custom.yaml` directly.
 
 ---
 

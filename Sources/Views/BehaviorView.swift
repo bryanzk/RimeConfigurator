@@ -67,7 +67,7 @@ struct BehaviorView: View {
                 set: { config.setLanguage($0) }
             )) {
                 ForEach(AppLanguage.allCases) { language in
-                    Text(language.displayName).tag(language)
+                    Text(config.strings.languageName(language)).tag(language)
                 }
             }
             .pickerStyle(.menu)

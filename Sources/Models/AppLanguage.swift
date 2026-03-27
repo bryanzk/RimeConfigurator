@@ -7,23 +7,23 @@ enum AppLanguage: String, CaseIterable, Identifiable, Equatable {
     case traditionalChineseHongKong = "zh-Hant-HK"
 
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .english:
-            return "English"
-        case .simplifiedChineseChina:
-            return "简体中文（中国）"
-        case .traditionalChineseTaiwan:
-            return "繁體中文（台灣）"
-        case .traditionalChineseHongKong:
-            return "繁體中文（香港）"
-        }
-    }
 }
 
 struct AppStrings {
     let language: AppLanguage
+
+    func languageName(_ option: AppLanguage) -> String {
+        switch option {
+        case .english:
+            return value("English", "英文", "英文", "英文")
+        case .simplifiedChineseChina:
+            return value("Simplified Chinese", "简体中文", "簡體中文", "簡體中文")
+        case .traditionalChineseTaiwan:
+            return value("Traditional Chinese (Taiwan)", "繁体中文（台湾）", "繁體中文（台灣）", "繁體中文（台灣）")
+        case .traditionalChineseHongKong:
+            return value("Traditional Chinese (Hong Kong)", "繁体中文（香港）", "繁體中文（香港）", "繁體中文（香港）")
+        }
+    }
 
     func tabTitle(_ tab: NavTab) -> String {
         switch tab {
@@ -165,6 +165,19 @@ struct AppStrings {
     var vimMode: String { value("Vim Mode", "Vim 模式", "Vim 模式", "Vim 模式") }
 
     var previewInlineTitle: String { value("Inline candidate preview", "光标处内嵌候选预览", "游標處內嵌候選預覽", "游標處內嵌候選預覽") }
+    var previewPreeditText: String { value("ni hao", "ni hao", "ni hao", "ni hao") }
+    var previewCandidates: [String] {
+        switch language {
+        case .english:
+            return ["hello", "hullo", "greeting", "hi there", "hello!"]
+        case .simplifiedChineseChina:
+            return ["你好", "拟好", "泥濠", "倪浩", "逆号"]
+        case .traditionalChineseTaiwan:
+            return ["你好", "擬好", "泥濠", "倪浩", "逆號"]
+        case .traditionalChineseHongKong:
+            return ["你好", "擬好", "泥濠", "倪浩", "逆號"]
+        }
+    }
     var candidateSample: String { value("Candidate", "候选", "候選", "候選") }
     var highlightSample: String { value("Selected", "高亮", "高亮", "高亮") }
     var pagingIndicator: String { value("1 / 3", "1 / 3", "1 / 3", "1 / 3") }
