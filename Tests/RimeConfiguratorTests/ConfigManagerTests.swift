@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import Yams
 @testable import RimeConfigurator
 
 @MainActor
@@ -27,9 +28,14 @@ struct ConfigManagerTests {
         try manager.saveConfig()
 
         let squirrelText = try String(contentsOf: workspace.rimeDir.appendingPathComponent("squirrel.custom.yaml"))
-        #expect(squirrelText.contains("app_options/com.apple.Terminal/ascii_mode: true"))
-        #expect(squirrelText.contains("app_options/com.apple.Terminal/no_inline: true"))
-        #expect(squirrelText.contains("style/show_paging: true"))
+        let squirrelYAML = try #require(Yams.load(yaml: squirrelText) as? [String: Any])
+        let patch = try #require(squirrelYAML["patch"] as? [String: Any])
+        let style = try #require(patch["style"] as? [String: Any])
+        let appOptions = try #require(patch["app_options"] as? [String: Any])
+        let terminal = try #require(appOptions["com.apple.Terminal"] as? [String: Any])
+        #expect(style["show_paging"] as? Bool == true)
+        #expect(terminal["ascii_mode"] as? Bool == true)
+        #expect(terminal["no_inline"] as? Bool == true)
         #expect(manager.hasUnsavedChanges == false)
     }
 
@@ -60,6 +66,95 @@ struct ConfigManagerTests {
         #expect(manager.appOptions.first?.bundleID == "com.apple.Terminal")
         #expect(manager.appOptions.first?.asciiMode == true)
         #expect(manager.appOptions.first?.noInline == true)
+    }
+
+    @Test("保存配置会保留 squirrel.custom.yaml 中未知字段")
+    func saveConfigPreservesUnknownFieldsInSquirrelCustom() async throws {
+        let workspace = try makeWorkspace()
+        let squirrelCustom = """
+        patch:
+          style/font_point: 18
+          app_options/com.apple.Terminal/ascii_mode: true
+          custom/advanced_rule: true
+        """
+        try squirrelCustom.write(
+            to: workspace.rimeDir.appendingPathComponent("squirrel.custom.yaml"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let manager = ConfigManager(
+            rimeDir: workspace.rimeDir,
+            sharedSupportDir: workspace.sharedSupportDir,
+            deployPerformer: .noop
+        )
+        manager.loadConfig()
+        manager.style.showPaging = true
+
+        try manager.saveConfig()
+
+        let saved = try String(contentsOf: workspace.rimeDir.appendingPathComponent("squirrel.custom.yaml"))
+        let savedYAML = try #require(Yams.load(yaml: saved) as? [String: Any])
+        let patch = try #require(savedYAML["patch"] as? [String: Any])
+        let style = try #require(patch["style"] as? [String: Any])
+        #expect(patch["custom/advanced_rule"] as? Bool == true)
+        #expect(style["show_paging"] as? Bool == true)
+    }
+
+    @Test("空 schema_list 不会回退到默认方案")
+    func emptySchemaListDoesNotFallbackToDefaults() async throws {
+        let workspace = try makeWorkspace()
+        try """
+        patch:
+          menu/page_size: 9
+          schema_list: []
+        """.write(
+            to: workspace.rimeDir.appendingPathComponent("default.custom.yaml"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        schema_list:
+          - schema: luna_pinyin
+            name: "朙月拼音"
+        """.write(
+            to: workspace.rimeDir.appendingPathComponent("default.yaml"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let manager = ConfigManager(
+            rimeDir: workspace.rimeDir,
+            sharedSupportDir: workspace.sharedSupportDir,
+            deployPerformer: .noop
+        )
+        manager.loadConfig()
+
+        #expect(manager.enabledSchemas.isEmpty)
+    }
+
+    @Test("保存配置会为特殊字符生成合法 YAML")
+    func saveConfigEscapesSpecialCharactersInYAML() async throws {
+        let workspace = try makeWorkspace()
+        let manager = ConfigManager(
+            rimeDir: workspace.rimeDir,
+            sharedSupportDir: workspace.sharedSupportDir,
+            deployPerformer: .noop
+        )
+
+        manager.loadConfig()
+        manager.style.fontFace = #"Font "Quoted": Mono"#
+        manager.enabledSchemas = [
+            SchemaItem(id: "luna_pinyin", name: #"朙月 "拼音": demo"#)
+        ]
+
+        try manager.saveConfig()
+
+        let squirrelContent = try String(contentsOf: workspace.rimeDir.appendingPathComponent("squirrel.custom.yaml"))
+        let defaultContent = try String(contentsOf: workspace.rimeDir.appendingPathComponent("default.custom.yaml"))
+
+        #expect((try? Yams.load(yaml: squirrelContent)) != nil)
+        #expect((try? Yams.load(yaml: defaultContent)) != nil)
     }
 
     @Test("部署结果可根据 build 时间戳推断自动成功")

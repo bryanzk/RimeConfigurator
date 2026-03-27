@@ -361,6 +361,7 @@ struct FontPicker: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
+    @MainActor
     class Coordinator: NSObject {
         var parent: FontPicker
         init(_ parent: FontPicker) { self.parent = parent }
